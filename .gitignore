@@ -1,0 +1,9 @@
+.env
+# Ignorar archivos de configuración local
+*.user
+*.suo
+*.vs/
+
+# Ignorar archivos de dependencias
+bin/
+obj/
