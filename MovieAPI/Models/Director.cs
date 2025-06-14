@@ -22,7 +22,11 @@ namespace MovieAPI.Models
 
         [SwaggerSchema(Description = "¿Está activo?")]
         public bool Active { get; set; }
+
+        // Propiedad de navegación para las películas relacionadas
+        public ICollection<Movies>? Movies { get; set; }
     }
+
     public class DirectorCreateDto
     {
         [Required]

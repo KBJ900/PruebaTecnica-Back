@@ -19,7 +19,6 @@ public class MoviesController : ControllerBase
         _context = context;
     }
 
-    // GET con paginación y búsqueda
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Movies>>> GetMovies(
         [FromQuery] int page = 1,
@@ -34,16 +33,25 @@ public class MoviesController : ControllerBase
         }
 
         var totalItems = await query.CountAsync();
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var movies = await query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .Select(m => new {
+            m.MoviesId,
+            m.Name,
+            m.ReleaseYear,
+            m.Gender,
+            m.Duration,
+            m.DirectorId,
+            Director = new { m.Director.DirectorId, m.Director.Name }
+        })
+        .ToListAsync();
 
         return Ok(new {
             totalItems,
             page,
             pageSize,
-            items
+            movies // Cambiado de 'items' a 'movies'
         });
     }
 

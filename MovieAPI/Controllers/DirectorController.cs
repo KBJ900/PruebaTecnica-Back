@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieAPI.Data;
 using MovieAPI.Models;
-
+using MovieAPI.DTOs;
 namespace MovieAPI.Controllers
 {
     [Route("api/[controller]")]
@@ -17,12 +17,14 @@ namespace MovieAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Director>>> GetDirectors(
+        public async Task<ActionResult> GetDirectors(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
             [FromQuery] string? search = null)
         {
-            var query = _context.Director.AsQueryable();
+            var query = _context.Director
+                .Include(d => d.Movies) // Include related movies
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -30,9 +32,25 @@ namespace MovieAPI.Controllers
             }
 
             var totalItems = await query.CountAsync();
-            var items = await query
+            var directors = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(d => new DirectorDto
+                {
+                    DirectorId = d.DirectorId,
+                    Name = d.Name,
+                    Nationality = d.Nationality,
+                    Age = d.Age,
+                    Active = d.Active,
+                    Movies = d.Movies != null ? d.Movies.Select(m => new MovieDto
+                    {
+                        MoviesId = m.MoviesId,
+                        Name = m.Name,
+                        ReleaseYear = m.ReleaseYear,
+                        Gender = m.Gender,
+                        Duration = m.Duration
+                    }).ToList() : new List<MovieDto>()
+                })
                 .ToListAsync();
 
             return Ok(new
@@ -40,7 +58,7 @@ namespace MovieAPI.Controllers
                 totalItems,
                 page,
                 pageSize,
-                items
+                directors
             });
         }
 
